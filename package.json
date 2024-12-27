@@ -1,0 +1,7 @@
+{
+  "private": true,
+  "name": "@this-project/241227",
+  "dependencies": {
+    "typescript": "^5.7.3"
+  }
+}
