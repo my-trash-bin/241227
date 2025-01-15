@@ -1,5 +1,5 @@
-export type Scalars<T> = T extends Record<"scalars", infer I> ? I : never;
-export type Objects<T> = T extends Record<"objects", infer I> ? I : never;
+type Scalars<T> = T extends Record<"scalars", infer I> ? I : never;
+type Objects<T> = T extends Record<"objects", infer I> ? I : never;
 
 export type SelectInput<T> = Readonly<Partial<Record<keyof Scalars<T>, true>>> &
   IncludeInput<T>;
