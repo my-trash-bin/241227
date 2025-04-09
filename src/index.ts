@@ -1,5 +1,8 @@
+import { RemoveFirst, StringJoin, StringReplace, XOR } from "./util";
+
 type Scalars<T> = T extends Record<"scalars", infer I> ? I : never;
 type Objects<T> = T extends Record<"objects", infer I> ? I : never;
+type UniqueIndices<T> = T extends Record<"uniqueIndices", infer I> ? I : never;
 
 export type SelectInput<T> = Readonly<Partial<Record<keyof Scalars<T>, true>>> &
   IncludeInput<T>;
@@ -48,3 +51,46 @@ type WrapArray<Target, Original> = Original extends any[] ? Target[] : Target;
 type WrapNullable<Target, Original> = Original extends NonNullable<Original>
   ? Target
   : Target | undefined;
+
+export type UniqueWhere<Model> = XOR<
+  UniqueWhereInternal<Model, Extract<UniqueIndices<Model>, any[]>, []>
+>;
+type UniqueWhereInternal<
+  Model,
+  Remaining extends any[],
+  Processed extends any[]
+> = Remaining["length"] extends 0
+  ? Processed
+  : UniqueWhereInternal<
+      Model,
+      RemoveFirst<Remaining>,
+      [
+        ...Processed,
+        {
+          [K in Extract<
+            StringJoin<
+              RenameSingleUnderscoreToDoubleUnderscoreInTuple<Remaining[0], []>,
+              "_"
+            >,
+            string
+          >]: {
+            [K in Remaining[0][number]]: K extends keyof Scalars<Model>
+              ? Scalars<Model>[K]
+              : K extends keyof Objects<Model>
+              ? UniqueWhere<Objects<Model>[K]>
+              : "ERROR";
+          };
+        }
+      ]
+    >;
+type RenameSingleUnderscoreToDoubleUnderscoreInTuple<
+  Remaining extends string[],
+  Processed extends string[]
+> = Remaining extends any // Fix error: Excessive stack depth comparing types
+  ? Remaining["length"] extends 0
+    ? Processed
+    : RenameSingleUnderscoreToDoubleUnderscoreInTuple<
+        RemoveFirst<Remaining>,
+        [...Processed, StringReplace<Remaining[0], "_", "__">]
+      >
+  : never;

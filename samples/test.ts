@@ -1,16 +1,20 @@
-import { GetInput, GetResult } from "../src";
+import { GetInput, GetResult, UniqueWhere } from "../src";
+import { XOR } from "../src/util";
+import { Test } from "./models/Test";
 import { User } from "./models/User";
-import { IsSameType } from "./util/IsSmaeType";
+import { ExpandRecursively, IsSameType } from "./util";
 
-declare function User<const T extends GetInput<User>>(_: T): GetResult<User, T>;
+declare function assertEqual<A, B>(arg: IsSameType<A, B>): unknown;
 
-const a = User({
+declare function GetUser<const T extends GetInput<User>>(
+  _: T
+): GetResult<User, T>;
+
+const a = GetUser({
   include: {
     comments: { select: { id: true, post: { select: { id: true } } } },
   },
 });
-
-declare function assertEqual<A, B>(arg: IsSameType<A, B>): unknown;
 
 assertEqual<
   ExpandRecursively<typeof a>,
@@ -19,8 +23,16 @@ assertEqual<
   >
 >(true);
 
-type ExpandRecursively<T> = T extends object
-  ? T extends infer O
-    ? { [K in keyof O]: ExpandRecursively<O[K]> }
-    : never
-  : T;
+assertEqual<
+  ExpandRecursively<UniqueWhere<User>>,
+  ExpandRecursively<
+    XOR<[{ id: { id: string } }, { nickname: { nickname: string } }]>
+  >
+>(true);
+
+assertEqual<
+  ExpandRecursively<UniqueWhere<Test>>,
+  ExpandRecursively<
+    XOR<[{ id: { id: string } }, { id1_id__2: { id1: string; id_2: number } }]>
+  >
+>(true);

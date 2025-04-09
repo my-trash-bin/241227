@@ -5,6 +5,7 @@ export interface User {
   name: "User";
   scalars: {
     id: string;
+    createTime: Date;
     login: string;
     nickname: string;
     representativePostId?: string;
@@ -14,4 +15,6 @@ export interface User {
     representativePost?: Post;
     comments: Comment[];
   };
+  uniqueIndices: [["id"], ["nickname"]];
+  nonUniqueIndices: [["createTime"]];
 }

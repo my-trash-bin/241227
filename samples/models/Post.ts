@@ -5,6 +5,7 @@ export interface Post {
   name: "Post";
   scalars: {
     id: string;
+    createTime: Date;
     authorId: string;
     title: string;
     content: string;
@@ -14,4 +15,6 @@ export interface Post {
     comments: Comment[];
     representativePostUser?: User;
   };
+  uniqueIndices: [["id"]];
+  nonUniqueIndices: [["authorId"], ["createTime"]];
 }
