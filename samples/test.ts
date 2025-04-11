@@ -33,6 +33,6 @@ assertEqual<
 assertEqual<
   ExpandRecursively<UniqueWhere<Test>>,
   ExpandRecursively<
-    XOR<[{ id: { id: string } }, { id1_id__2: { id1: string; id_2: number } }]>
+    XOR<[{ id: { id: string } }, { id1_id_2: { id1: string; id_2: number } }]>
   >
 >(true);

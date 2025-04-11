@@ -1,4 +1,4 @@
-import { RemoveFirst, StringJoin, StringReplace, XOR } from "./util";
+import { RemoveFirst, StringJoin, XOR } from "./util";
 
 type Scalars<T> = T extends Record<"scalars", infer I> ? I : never;
 type Objects<T> = T extends Record<"objects", infer I> ? I : never;
@@ -67,13 +67,7 @@ type UniqueWhereInternal<
       [
         ...Processed,
         {
-          [K in Extract<
-            StringJoin<
-              RenameSingleUnderscoreToDoubleUnderscoreInTuple<Remaining[0], []>,
-              "_"
-            >,
-            string
-          >]: {
+          [K in Extract<StringJoin<Remaining[0], "_">, string>]: {
             [K in Remaining[0][number]]: K extends keyof Scalars<Model>
               ? Scalars<Model>[K]
               : K extends keyof Objects<Model>
@@ -83,14 +77,102 @@ type UniqueWhereInternal<
         }
       ]
     >;
-type RenameSingleUnderscoreToDoubleUnderscoreInTuple<
-  Remaining extends string[],
-  Processed extends string[]
-> = Remaining extends any // Fix error: Excessive stack depth comparing types
-  ? Remaining["length"] extends 0
-    ? Processed
-    : RenameSingleUnderscoreToDoubleUnderscoreInTuple<
-        RemoveFirst<Remaining>,
-        [...Processed, StringReplace<Remaining[0], "_", "__">]
-      >
+
+export type NonUniqueWhere<Model> = {
+  [K in
+    | keyof Scalars<Model>
+    | keyof Objects<Model>
+    | "AND"
+    | "OR"
+    | "NOT"]?: K extends "AND" | "OR"
+    ? NonUniqueWhere<Model>[]
+    : K extends "NOT"
+    ? NonUniqueWhere<Model>
+    : K extends keyof Scalars<Model>
+    ? ScalarWhere<Scalars<Model>[K]>
+    : K extends keyof Objects<Model>
+    ? ObjectWhere<Objects<Model>[K]>
+    : never;
+};
+
+export type ScalarWhere<T> = T extends string
+  ? StringWhere
+  : T extends Date
+  ? DateWhere
+  : T extends number
+  ? NumberWhere
+  : T extends number
+  ? BooleanWhere
+  : T extends string | undefined
+  ? StringNullableWhere
+  : T extends Date | undefined
+  ? DateNullableWhere
+  : T extends number | undefined
+  ? NumberNullableWhere
+  : T extends number | undefined
+  ? BooleanNullableWhere
   : never;
+
+export type StringWhere = XOR<[{ exact: string }, { startsWith: string }]>;
+
+export type DateWhere = XOR<
+  [{ exact: Date }, { lt: Date }, { gt: Date }, { lte: Date }, { gte: Date }]
+>;
+
+export type NumberWhere = XOR<
+  [
+    { exact: number },
+    { lt: number },
+    { gt: number },
+    { lte: number },
+    { gte: number }
+  ]
+>;
+
+export type BooleanWhere = XOR<[{ exact: boolean }]>;
+
+export type StringNullableWhere = XOR<
+  [{ not: null }, { is: null }, { exact: string }, { startsWith: string }]
+>;
+
+export type DateNullableWhere = XOR<
+  [
+    { not: null },
+    { is: null },
+    { exact: Date },
+    { lt: Date },
+    { gt: Date },
+    { lte: Date },
+    { gte: Date }
+  ]
+>;
+
+export type NumberNullableWhere = XOR<
+  [
+    { not: null },
+    { is: null },
+    { exact: number },
+    { lt: number },
+    { gt: number },
+    { lte: number },
+    { gte: number }
+  ]
+>;
+
+export type BooleanNullableWhere = XOR<
+  [{ not: null }, { is: null }, { exact: boolean }]
+>;
+
+export type ObjectWhere<Field> = Field extends (infer I)[]
+  ? ObjectArrayWhere<I>
+  : Field extends (infer I)[] | undefined
+  ? NullableObjectArrayWhere<I>
+  : undefined extends Field
+  ? NullableSingleObjectWhere<Exclude<Field, undefined>>
+  : SingleObjectWhere<Field>;
+
+// TODO:
+export type ObjectArrayWhere<Model> = XOR<[]>;
+export type NullableObjectArrayWhere<Model> = XOR<[]>;
+export type SingleObjectWhere<Model> = XOR<[]>;
+export type NullableSingleObjectWhere<Model> = XOR<[]>;
